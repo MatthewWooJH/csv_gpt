@@ -1,6 +1,6 @@
 streamlit
 streamlit_chat
-langchain 
+langchain == 0.0172
 openai == 0.27.6
 faiss-cpu 
 tiktoken
