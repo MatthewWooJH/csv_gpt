@@ -1,5 +1,6 @@
-#pip install streamlit langchain openai faiss-cpu tiktoken
+# pip install streamlit langchain openai faiss-cpu tiktoken
 
+import openai
 import streamlit as st
 from streamlit_chat import message
 from langchain.embeddings.openai import OpenAIEmbeddings
@@ -16,7 +17,7 @@ user_api_key = st.sidebar.text_input(
     placeholder="Paste your openAI API key, sk-",
     type="password")
 
-uploaded_file = st.sidebar.file_uploader("upload", type="csv")
+uploaded_file = st.sidebar.file_uploader("upload")
 
 if uploaded_file :
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
@@ -54,7 +55,7 @@ if uploaded_file :
         st.session_state['generated'] = ["Hello ! Ask me anything about " + uploaded_file.name + " 🤗"]
 
     if 'past' not in st.session_state:
-        st.session_state['past'] = ["Hey ! 👋"]
+        st.session_state['past'] = ["Start chat"]
         
     #container for the chat history
     response_container = st.container()
@@ -74,6 +75,8 @@ if uploaded_file :
             st.session_state['generated'].append(output)
             # Display token count in the sidebar
             st.sidebar.text("Total Token Count: {}".format(total_token_count))
+            #st.sidebar.text("Response token count: {}".format(total_token_count))
+            
 
     if st.session_state['generated']:
         with response_container:
