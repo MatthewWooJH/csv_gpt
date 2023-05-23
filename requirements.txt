@@ -1,6 +1,7 @@
+python 3.11.1
 streamlit
 streamlit_chat
-langchain==0.0.159
+langchain
 openai
 faiss-cpu 
 tiktoken
