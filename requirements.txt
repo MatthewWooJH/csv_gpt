@@ -1,7 +1,6 @@
 streamlit
 streamlit_chat
-langchain == 0.0.150
-openai == 0.27.6
+langchain
+openai
 faiss-cpu 
 tiktoken
-pydantic == 1.10.6
