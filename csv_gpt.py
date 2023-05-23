@@ -1,5 +1,6 @@
 # pip install streamlit langchain openai faiss-cpu tiktoken
 
+import openai
 import streamlit as st
 from streamlit_chat import message
 from langchain.embeddings.openai import OpenAIEmbeddings
@@ -7,7 +8,17 @@ from langchain.chat_models import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
 from langchain.document_loaders.csv_loader import CSVLoader
 from langchain.vectorstores import FAISS
+import tiktoken
 import tempfile
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class BaseOpenAI(BaseModel):
+    temperature: float = Field(0.6, ge=0.0, le=1.0, allow_reuse=True)
+    max_tokens: Optional[int] = Field(None, ge=5, allow_reuse=True)
+    # Other fields and methods of the class
+
+    # Rest of the code for the BaseOpenAI class
 
 
 user_api_key = st.sidebar.text_input(
@@ -15,7 +26,7 @@ user_api_key = st.sidebar.text_input(
     placeholder="Paste your openAI API key, sk-",
     type="password")
 
-uploaded_file = st.sidebar.file_uploader("upload", type="csv")
+uploaded_file = st.sidebar.file_uploader("upload")
 
 if uploaded_file :
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
@@ -32,11 +43,19 @@ if uploaded_file :
                                                                       retriever=vectors.as_retriever())
 
     def conversational_chat(query):
-        
+        enc = tiktoken.get_encoding("p50k_base")
+        query_tokens = enc.encode(query)
+        query_token_count = len(query_tokens)
+
         result = chain({"question": query, "chat_history": st.session_state['history']})
+        response_tokens = enc.encode(result["answer"])
+        response_token_count = len(response_tokens)
+
+        total_token_count = query_token_count + response_token_count
+
         st.session_state['history'].append((query, result["answer"]))
-        
-        return result["answer"]
+
+        return result["answer"], total_token_count
     
     if 'history' not in st.session_state:
         st.session_state['history'] = []
@@ -59,10 +78,14 @@ if uploaded_file :
             submit_button = st.form_submit_button(label='Send')
             
         if submit_button and user_input:
-            output = conversational_chat(user_input)
+            output, total_token_count = conversational_chat(user_input)
             
             st.session_state['past'].append(user_input)
             st.session_state['generated'].append(output)
+            # Display token count in the sidebar
+            st.sidebar.text("Total Token Count: {}".format(total_token_count))
+            #st.sidebar.text("Response token count: {}".format(total_token_count))
+            
 
     if st.session_state['generated']:
         with response_container:
